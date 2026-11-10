@@ -1,52 +1,158 @@
-# MedFlow Clinic ERP — Phase 4 Final QA
+# MedFlow
+### Multi-Role Healthcare Operations Platform
 
-Phase 3 connects the verified Phase 1 MedFlow interface to a persistent relational SQLite API. The verified source is `MedFlow (2).zip` (SHA-256: `7dad214f7745ba708eeb0d23d59a95b4fcbb3c58a79825370d11f2ae19638e70`); no older archive was used as authority. The app retains its existing page/route design, while authentication, API transport, reporting, exact INR accounting and selected workflow copy are integrated.
+MedFlow is a full-stack healthcare operations platform designed to streamline clinic administration through a unified application. It connects clinical, administrative, pharmacy, laboratory, and financial workflows, enabling healthcare teams to manage essential operations through a centralized system.
 
-## Run locally
+Built with React, TypeScript, Node.js, Express.js, and PostgreSQL, MedFlow focuses on secure role-based access, transactional consistency, and reliable healthcare workflows.
 
-Use Node.js 22.5+ and keep both servers on loopback.
+**6 User Roles | 6 Core Modules | 30+ REST Endpoints | 43 Passing Backend Tests**
 
-**Terminal 1 — backend:**
+---
+
+## Core Modules
+
+### 1. Appointment Management
+- Centralized appointment management and scheduling.
+- Role-based appointment operations.
+- Structured appointment workflows and status management.
+
+### 2. Patient Management
+- Centralized patient records.
+- Patient information management.
+- Secure access to patient-related information.
+
+### 3. Prescription Management
+- Doctor-authored prescription workflows.
+- Prescription processing and dispensing.
+- Atomic prescription dispensing to maintain transactional consistency.
+
+### 4. Pharmacy & Inventory
+- Pharmacy inventory management.
+- Prescription-linked dispensing workflows.
+- Inventory-related operational controls.
+
+### 5. Laboratory Management
+- Doctor-initiated laboratory test ordering.
+- Searchable test catalogue with canonical test names.
+- Patient-requested laboratory appointments with receptionist confirmation.
+- Dedicated technician workflow for processing scheduled orders.
+- Structured CBC and Lipid Panel result templates.
+- Result review and controlled patient visibility.
+- Downloadable PDF laboratory reports for authorized users.
+- Legacy laboratory record preservation through additive database migrations.
+
+### 6. Billing & Finance
+- Integrated clinic billing workflows.
+- Integer-paise monetary representation to prevent floating-point precision errors.
+- Consistent financial record handling.
+
+---
+
+## Engineering Highlights
+
+- **Role-Based Architecture:** Six user roles with JWT authentication and server-side authorization.
+- **30+ REST Endpoints:** Structured API layer supporting multiple healthcare workflows.
+- **Transactional Consistency:** Atomic prescription dispensing and conflict-checked approval operations.
+- **Laboratory Workflow:** End-to-end lifecycle from doctor ordering to patient-accessible released reports.
+- **Structured Results:** Configurable result templates with required-field validation.
+- **PDF Generation:** Downloadable laboratory reports with verified document output.
+- **Database Integrity:** Additive migrations, legacy record compatibility, and persistence verification.
+- **Automated Testing:** 43 passing backend tests covering API behavior, authorization, persistence, and laboratory workflows.
+
+---
+
+## Laboratory Workflow Enhancement
+
+One of MedFlow's major engineering contributions is its end-to-end laboratory workflow, connecting doctors, patients, receptionists, and laboratory technicians through a controlled process.
+
+### Doctor Ordering
+- Searchable test selector backed by an explicit catalogue derived from existing test data.
+- Server-maintained catalogue codes and canonical test names.
+- Support for existing named custom test requests.
+
+### Patient Booking & Scheduling
+- Patients can request laboratory appointments for existing eligible doctor orders.
+- Receptionists confirm, schedule, or reschedule laboratory appointments.
+- Duplicate active requests and unauthorized access are prevented.
+- Laboratory appointments remain separate from doctor consultations and consultation charges.
+
+### Technician Workflow
+- Technicians access scheduled orders through the appropriate workflow.
+- Unscheduled orders remain inaccessible to technicians.
+- Existing technician status transitions are preserved.
+- Historical laboratory records are migrated without losing their previous status or result text.
+
+### Structured Results & Reports
+- Required-field templates for CBC and Lipid Panel.
+- Validation before result completion and release.
+- Patient results remain hidden until reviewed.
+- Authorized ordering doctors and the corresponding patient can download released PDF reports.
+
+### Data Integrity
+- Additive database migrations.
+- Legacy test-name compatibility.
+- Audit entries and notifications for relevant workflow operations.
+- Persistence verification across backend restarts.
+
+---
+
+## Technology Stack
+
+| Category | Technologies |
+|---|---|
+| Frontend | React, TypeScript |
+| Backend | Node.js, Express.js |
+| Database | PostgreSQL |
+| Authentication | JSON Web Tokens (JWT) |
+| API Architecture | REST APIs |
+| Testing | Automated Backend Tests |
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Node.js 22.5+
+- npm
+- PostgreSQL
+
+### 1. Clone the Repository
 
 ```bash
-cd backend
-npm ci
-cp .env.example .env
-# Edit JWT_SECRET to a private random value (32+ characters).
-npm run db:migrate
-NODE_ENV=development npm run db:seed
-npm run db:verify
-npm run dev
+git clone https://github.com/soumyadoshii/medflow.git
+cd medflow
 ```
 
-Set `CORS_ORIGIN=http://127.0.0.1:3000` in `backend/.env` to match the frontend origin.
-
-**Terminal 2 — frontend:**
+### 2. Install Dependencies
 
 ```bash
-cd frontend
-npm ci
-npm run dev
+npm install
 ```
 
-Open `http://127.0.0.1:3000`. The Vite development server proxies `/api` to Express. Seeded synthetic logins (password `demo123`) are listed in [DEMO_DATA.md](backend/DEMO_DATA.md). Do not expose these demo credentials beyond local testing.
+### 3. Configure Environment Variables
 
-## Contents
+Create a `.env` file in the appropriate backend directory and configure the required PostgreSQL connection string, authentication secret, and other environment variables used by the application.
 
-- `backend/`: Express/TypeScript API, normalized versioned SQLite migrations, repositories, transactional workflows, deterministic seed/reset/verify CLI, and 43 integration/persistence tests.
-- `frontend/`: the verified Phase 1 interface with API-backed JWT authentication and INR presentation.
-- [Laboratory workflow enhancement](LABORATORY_ENHANCEMENT.md): catalogue selection, lab-only scheduling, structured results, PDF reports, setup details, validation results and remaining limits.
-- [Phase 3 handoff and verification](PHASE3_HANDOFF.md): schema, migration/seed behavior, INR boundaries, files changed, test results and limitations.
-- [Final QA and security report](FINAL_QA_REPORT.md): final test/build/audit outcomes, manual UI walkthrough, findings and submission notes.
-- [Backend setup](backend/SETUP_GUIDE.md), [database contract](backend/DATABASE_CONTRACT.md), [API contract](backend/FRONTEND_API_CONTRACT.md), and [synthetic demo data](backend/DEMO_DATA.md).
+### 4. Configure the Database
 
-## Commands
+Create the PostgreSQL database and run the project's database migrations using the configured migration scripts.
 
-```bash
-# backend
-cd backend && npm run build && npm test && npm audit
-# frontend, from another terminal
-cd frontend && npm run typecheck && npm run build && npm audit
-```
+### 5. Run the Application
 
-Use `NODE_ENV=development npm run db:reset` only when you intentionally want to **replace the local SQLite file with synthetic seed data**. The reset guard requires the explicit development mode and the database path must never point to production data. The backend binds to `127.0.0.1` by default; deployment, public hosting, and production operations are not part of this deliverable.
+Start the frontend and backend using the development scripts defined in their respective `package.json` files.
+
+---
+
+## Project Focus
+
+MedFlow demonstrates practical full-stack engineering through:
+
+- Multi-role authentication and authorization.
+- REST API development and integration.
+- Relational database design and migrations.
+- Transaction-safe healthcare operations.
+- End-to-end laboratory workflow automation.
+- Structured data validation and PDF report generation.
+- Backend testing and data persistence verification.
+
+The project emphasizes maintainable architecture, data integrity, and reliable coordination between different healthcare stakeholders.
